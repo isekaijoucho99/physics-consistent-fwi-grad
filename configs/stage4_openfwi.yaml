@@ -1,0 +1,24 @@
+# CurveVel_A model_0000 is the held-out test geology in the Stage 3 OpenFWI report.
+# Set npy_path to the local copy of this OpenFWI velocity stack.
+output_dir: ../outputs/stage4_openfwi
+stage3_checkpoint: ../outputs/stage3_openfwi/best_stage3.pt
+allow_scratch: false
+grid: {nz: 64, nx: 64, dz: 10.0, dx: 10.0}
+physics: {dt: 0.001, nt: 550, f0: 15.0, npml: 12, shot_batch_size: 4}
+acquisition: {n_shots: 8, n_rec: 56, margin: 4, src_depth_idx: 2, rec_depth_idx: 2}
+model:
+  npy_path: ../data/openfwi/Vel Family/CurveVel_A/model/model1.npy
+  index: 0
+  method: gaussian
+  sigma: 5.0
+inversion: {n_iters: 35, f_cut: 5.0, sparse_ratio: 0.25, n_check_shots: 2}
+grid_lr: 5.0
+reparam:
+  lr_low: 0.004
+  lr_high: 0.0008
+  lr_grid: 0.001
+  fourier_scale: 2.0
+  max_step_mps: 20.0
+  detail_unlock_frac: 0.55
+  grid_unlock_frac: 0.85
+  seed: 42

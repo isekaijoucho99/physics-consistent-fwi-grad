@@ -1,0 +1,12 @@
+# Seed 44 is model_0002 in the Stage 3 smoke test split.
+output_dir: ../outputs/stage4_smoke
+stage3_checkpoint: ../outputs/stage3_smoke/best_stage3.pt
+allow_scratch: true
+grad_model: {base_channels: 8, cond_dim: 16}
+grid: {nz: 48, nx: 64, dz: 10.0, dx: 10.0}
+physics: {dt: 0.001, nt: 220, f0: 18.0, npml: 10, shot_batch_size: 2}
+acquisition: {n_shots: 4, n_rec: 20, margin: 4, src_depth_idx: 2, rec_depth_idx: 2}
+model: {seed: 44, method: gaussian, sigma: 4.0}
+inversion: {n_iters: 6, f_cut: 5.0, sparse_ratio: 0.5, n_check_shots: 2}
+grid_lr: 5.0
+reparam: {low_hidden: 16, high_hidden: 24, n_fourier: 12, seed: 42}

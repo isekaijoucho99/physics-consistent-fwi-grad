@@ -1,0 +1,16 @@
+# Production-size grid. dt is in seconds, lengths in m, velocities in m/s.
+grid: {nz: 128, nx: 256, dz: 10.0, dx: 10.0}
+physics: {dt: 0.001, nt: 1000, f0: 12.0, npml: 20, shot_batch_size: 4}
+acquisition: {n_shots: 20, n_rec: 128, src_depth_idx: 2, rec_depth_idx: 2, margin: 6}
+# For OpenFWI, add npy_path and index (the first model) here.
+model: {seed: 42, method: gaussian, sigma: 8.0}
+inversion: {n_iters: 20, lr: 6.0, sparse_ratio: 0.25, f_cut: 0.0}
+dataset:
+  n_models: 10
+  n_iters: 5
+  scenarios: [normal, low_freq_cut, noisy, sparse, biased_init]
+  f_cut: 5.0
+  snr_db: 15.0
+  sparse_ratio: 0.25
+  bias_mps: 200.0
+  split_fractions: [0.7, 0.2, 0.1]

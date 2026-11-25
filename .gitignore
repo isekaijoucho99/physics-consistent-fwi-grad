@@ -1,0 +1,34 @@
+# Private / local-only files (NEVER push to public GitHub)
+*.pdf
+paper1_tgrs/
+AGENTS.md
+scripts/sync_to_winpc.sh
+*.bat
+
+# Experiment outputs, checkpoints & datasets
+/outputs/
+/data/
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+*.bin
+*.mat
+
+# Python / IDE / OS caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+Thumbs.db
+*.log

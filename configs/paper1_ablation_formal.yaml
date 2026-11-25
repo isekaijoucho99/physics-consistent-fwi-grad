@@ -1,0 +1,38 @@
+# 40 OpenFWI models (28/6/6 stratified by geology), 800 active-descent trajectory samples (k=0,3,8,16).
+output_dir: ../outputs/paper1_ablation_formal
+seed: 42
+experiment:
+  grid: {nz: 64, nx: 64, dz: 10.0, dx: 10.0}
+  physics: {dt: 0.001, nt: 500, f0: 15.0, npml: 12, shot_batch_size: 8}
+  acquisition: {n_shots: 8, n_rec: 56, margin: 4}
+  model:
+    seed: 42
+    method: gaussian
+    sigma: 5.0
+    sources:
+      - {name: CurveVel_A, npy_path: ../data/openfwi/Vel Family/CurveVel_A/model/model1.npy, n_models: 10, start_index: 0}
+      - {name: CurveVel_B, npy_path: ../data/openfwi/Vel Family/CurveVel_B/model/model1.npy, n_models: 10, start_index: 0}
+      - {name: FlatVel_A, npy_path: ../data/openfwi/Vel Family/FlatVel_A/model/model1.npy, n_models: 10, start_index: 0}
+      - {name: FlatVel_B, npy_path: ../data/openfwi/Vel Family/FlatVel_B/model/model1.npy, n_models: 10, start_index: 0}
+  inversion: {lr: 12.0, optimizer: adam, v_bounds: [1500.0, 5000.0]}
+  dataset:
+    n_iters: 4
+    sample_steps: [0, 3, 8, 16]
+    scenarios: [normal, low_freq_cut, noisy, sparse, biased_init]
+    split_fractions: [0.7, 0.15, 0.15]
+    sparse_ratio: 0.25
+    f_cut: 5.0
+    snr_db: 15.0
+    bias_mps: 150.0
+network: {base_channels: 32, cond_dim: 32}
+stage2: {epochs: 35, batch_size: 8, lr: 0.0005, num_workers: 0}
+stage3: {epochs: 12, batch_size: 8, lr: 0.0001, num_workers: 0}
+physics_loss: {lambda_dir: 0.05, lambda_data: 0.3, lambda_str: 0.01, warmup_epochs: 4,
+               physics_subset_size: 2, n_physics_shots: 2, eta: 12.0, rho: 0.01}
+closed_loop:
+  n_ood_models: 2
+  n_iters: 60
+  lr: 15.0
+  sparse_ratio: 0.25
+  n_check_shots: 2
+  optimizer: adam

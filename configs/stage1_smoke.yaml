@@ -1,0 +1,15 @@
+# A complete CPU/CUDA run, with one distinct geology per split.
+grid: {nz: 48, nx: 64, dz: 10.0, dx: 10.0}  # m
+physics: {dt: 0.001, nt: 180, f0: 18.0, npml: 10, shot_batch_size: 2}
+acquisition: {n_shots: 4, n_rec: 20, src_depth_idx: 2, rec_depth_idx: 2, margin: 4}
+model: {seed: 42, method: gaussian, sigma: 4.0}
+inversion: {n_iters: 3, lr: 5.0, sparse_ratio: 0.5, f_cut: 0.0}
+dataset:
+  n_models: 3
+  n_iters: 2
+  scenarios: [normal, low_freq_cut, noisy, sparse, biased_init]
+  f_cut: 7.0            # Hz
+  snr_db: 15.0
+  sparse_ratio: 0.5
+  bias_mps: 150.0
+  split_fractions: [0.6, 0.2, 0.2]

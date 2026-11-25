@@ -1,0 +1,27 @@
+# Match the Stage 2 CurveVel_A trajectories, acquisition and supervised checkpoint.
+output_dir: ../outputs/stage3_openfwi
+pretrained_checkpoint: ../outputs/stage2_openfwi/best.pt
+allow_scratch: false
+dataset:
+  manifest: ../outputs/dataset_openfwi/manifest.json
+  auto_build: false
+  max_iters: 4
+  stage1_config:
+    grid: {nz: 64, nx: 64, dz: 10.0, dx: 10.0}
+    physics: {dt: 0.001, nt: 350, f0: 15.0, npml: 12, shot_batch_size: 4}
+    acquisition: {n_shots: 8, n_rec: 56, margin: 4, src_depth_idx: 2, rec_depth_idx: 2}
+    model: {seed: 42}
+    dataset: {snr_db: 15.0}
+loss: {mu: 0.5, lambda_unc: 0.1, eps: 0.0001}
+training: {epochs: 12, batch_size: 4, lr: 0.0001, weight_decay: 0.01, num_workers: 0, seed: 42}
+physics_loss:
+  lambda_dir: 0.05
+  lambda_data: 0.3
+  lambda_str: 0.01
+  warmup_epochs: 5
+  physics_subset_size: 2
+  n_physics_shots: 2
+  eta: 5.0
+  rho: 0.01
+  max_update_mps: 100.0
+guided_fwi: {n_iters: 12, lr: 5.0, sparse_ratio: 0.25, n_check_shots: 2, max_backtracks: 3}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fwi-grad"
+version = "0.1.0"
+description = "Differentiable 2D acoustic FWI and multimodal trajectory generation"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.3", "numpy>=1.24", "PyYAML>=6"]
+
+[project.optional-dependencies]
+plotting = ["matplotlib>=3.6", "Pillow>=9.0"]
+test = ["pytest>=7", "matplotlib>=3.6", "Pillow>=9.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
