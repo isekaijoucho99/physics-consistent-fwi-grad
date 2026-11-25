@@ -7,7 +7,7 @@ Adjoint-state FWI evaluates multi-shot forward and backward wave simulations at 
 
 - **Dimensionless, Resolution- and Shot-Agnostic Design:** Normalizes velocity states by the initial-model mean, aggregates arbitrary shot counts via permutation-invariant masked mean-max pooling, omits fixed grid coordinates, and adds dual-scale residual corrections on top of log-compressed sparse gradients.
 - **Physics-Consistent Two-Stage Training:** Combines supervised directional/amplitude and Laplace NLL calibration (`Stage 2`) with edge-weighted structural continuity ($\mathcal{L}_{\text{str}}$), multi-probe finite-difference directional-derivative matching ($\mathcal{L}_{\text{dir}}$), and differentiable one-step PDE descent ($\mathcal{L}_{\text{data}}$) (`Stage 3`).
-- **Safeguarded Closed-Loop FWI:** Weights reversible Adam updates by calibrated pixelwise confidence and enforces wave-equation descent on out-of-sample check shots via a four-tier verification ladder (immediate acceptance, backtracking line search, sparse blending, and full-adjoint fallback).
+- **Safeguarded Misfit-Proportional Closed-Loop FWI:** Anneals surrogate residual corrections in proportion to out-of-sample check-shot misfit reduction ($w_k = \min(1, J_{\mathcal{S}_{\text{chk}}}(v_k)/J_{\mathcal{S}_{\text{chk}}}(v_0))$), weights reversible Adam updates by calibrated confidence, and enforces wave-equation descent via a four-tier verification ladder (immediate acceptance, backtracking line search, sparse blending, and full-adjoint fallback).
 
 ## Repository Layout
 ```text

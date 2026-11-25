@@ -162,6 +162,7 @@ def _verify_step(
     mean_sigma: float,
     current_lr: float,
     adam: _AdamState | None = None,
+    surrogate_weight: float = 1.0,
 ) -> StepResult:
     """Verify a candidate update on ``check_shots`` with backtracking and fallback."""
     if cached_before is not None:
@@ -200,6 +201,7 @@ def _verify_step(
     if adam is not None:
         # Mean-normalize confidence so uncertainty redistributes trust without shrinking Adam step size.
         conf = (conf / conf.mean().clamp_min(1e-6)).clamp(0.2, 1.0)
+        conf = (1.0 - surrogate_weight) + surrogate_weight * conf
     result = try_direction(pred, lr, conf, config.max_backtracks, use_adam=True)
     decision = "predicted"
     if result is not None and result[2] > 0:
@@ -264,6 +266,7 @@ def run_physics_guided_fwi(
     records: list[dict] = []
     current_lr = config.lr
     cached_check_loss: float | None = None
+    init_check_loss: float | None = None
     adam = (
         _AdamState(torch.zeros_like(v), torch.zeros_like(v))
         if config.optimizer.lower() == "adam"
@@ -290,9 +293,15 @@ def run_physics_guided_fwi(
             # Reuse check loss from the previous accepted step (or sparse loss if check == sparse).
             if cached_check_loss is None and check_shots == sparse_shots:
                 cached_check_loss = sparse["loss"]
+            if adam is not None and init_check_loss is not None and cached_check_loss is not None:
+                w_k = min(1.0, max(0.0, cached_check_loss / max(init_check_loss, 1e-12)))
+            else:
+                w_k = 1.0
+            pred_eff = sparse["grad"] + w_k * (pred - sparse["grad"]) if w_k < 1.0 else pred
+            mean_sigma_eff = mean_sigma * w_k
             step = _verify_step(
                 v,
-                pred,
+                pred_eff,
                 sigma,
                 sparse["grad"],
                 check_shots,
@@ -302,10 +311,13 @@ def run_physics_guided_fwi(
                 geom,
                 solver,
                 config,
-                mean_sigma,
+                mean_sigma_eff,
                 current_lr,
                 adam=adam,
+                surrogate_weight=w_k,
             )
+            if init_check_loss is None:
+                init_check_loss = step.loss_before
             v = step.velocity
             current_lr = step.next_lr
             cached_check_loss = step.loss_after
