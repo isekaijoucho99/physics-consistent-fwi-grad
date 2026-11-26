@@ -216,9 +216,8 @@ def draw_verification(fig, ax, a):
 
     arrow(ax, [(0.865, 0.667), (0.865, 0.630)], TEAL, head=6)
 
-    label(ax, 0.865, 0.604, r"Updated Velocity $v_{k+1}$", 9.2, weight="bold")
-    blend = 0.35 * a["v_true"] + 0.65 * a["v_0"]
-    tile(fig, [0.768, 0.428, 0.194, 0.148], blend / 1000, "turbo", VELOCITY)
+    label(ax, 0.865, 0.604, r"Inverted Velocity $v_K$", 9.2, weight="bold")
+    tile(fig, [0.768, 0.428, 0.194, 0.148], a["v_updated"] / 1000, "turbo", VELOCITY)
 
 
 def draw_flow(ax):
@@ -289,7 +288,8 @@ def draw_descent(fig, ax, case, n_iters):
     histories = {name: np.asarray(loop[name]["full_loss_history"]) / baseline for name in METHODS}
     detail_card(ax, 0.675, "(d) Closed-Loop Convergence")
 
-    k = np.arange(n_iters + 1)
+    n_k = len(next(iter(histories.values()))) - 1
+    k = np.arange(n_k + 1)
     chart = fig.add_axes([0.722, 0.078, 0.242, 0.158], zorder=2)
     chart.spines[["top", "right"]].set_visible(False)
     for side in ("bottom", "left"):
@@ -301,8 +301,8 @@ def draw_descent(fig, ax, case, n_iters):
     for name, (legend, color, style, lw) in METHODS.items():
         chart.plot(k, histories[name], label=legend, color=color, ls=style, lw=lw)
 
-    chart.set(xlim=(0, n_iters), ylim=(0, 1.03),
-              xticks=[0, 5, 10, 15, 20, 25], yticks=[0, 0.5, 1.0])
+    chart.set(xlim=(0, n_k), ylim=(0, 1.03),
+              xticks=np.linspace(0, n_k, 5, dtype=int), yticks=[0, 0.5, 1.0])
     chart.set_xlabel(r"Iteration $k$", fontsize=8.5, color=INK, labelpad=2.0)
     chart.set_ylabel(r"Normalized $J_{\rm full}$", fontsize=8.5, color=INK, labelpad=2.5)
     chart.legend(loc="upper right", frameon=False, fontsize=8.2,

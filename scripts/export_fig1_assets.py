@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Export real Marmousi2 A5 tensors for the visual Figure 1 framework diagram."""
 
+import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -12,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT)]
 
 from fwi_grad.data.dataset_builder import make_experiment
-from fwi_grad.inversion.guided_fwi import GuidedFWIConfig, _predict
+from fwi_grad.inversion.guided_fwi import GuidedFWIConfig, _predict, run_physics_guided_fwi
 from fwi_grad.physics.geometry import select_sparse_shots
 from fwi_grad.physics.residuals import compute_multimodal_residuals
 from fwi_grad.physics.wavelet import highpass_filter
@@ -20,7 +22,12 @@ from scripts.run_paper1_ablation import _load_model
 
 
 def main():
-    cfg_path = ROOT / "configs" / "paper1_benchmarks.yaml"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", default=str(ROOT / "configs" / "paper1_benchmarks.yaml"))
+    parser.add_argument("--output", default=str(ROOT / "outputs" / "fig1_marmousi2_assets.npz"))
+    args = parser.parse_args()
+
+    cfg_path = Path(args.config).resolve()
     config = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -48,12 +55,17 @@ def main():
         obs_hp = highpass_filter(obs[list(shots)], solver.dt, 5.0)
         res = compute_multimodal_residuals(syn_hp, obs_hp)
 
-    out_path = ROOT / "outputs" / "fig1_marmousi2_assets.npz"
+    loop = run_physics_guided_fwi(
+        initial, truth, obs, net, solver, wavelet, geom, replace(cfg, seed=config.get("seed", 42))
+    )
+
+    out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
         out_path,
         v_true=truth.cpu().numpy(),
         v_0=initial.cpu().numpy(),
+        v_updated=loop["v_final"].detach().cpu().numpy(),
         wavelet=wavelet.cpu().numpy(),
         obs_sp=obs_hp.cpu().numpy(),
         syn_sp=syn_hp.cpu().numpy(),
