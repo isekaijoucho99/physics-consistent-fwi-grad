@@ -174,6 +174,16 @@ def _verify_step(
         next_adam = None
         if adam is not None and use_adam:
             step, next_adam = adam.propose(grad, conf, lr, config.max_update_mps)
+        elif adam is not None:
+            # Keep Adam's diagonal preconditioner on fallback steps so depth sensitivity stays balanced.
+            t = adam.step + 1
+            v_new = adam.beta2 * adam.v_sq + (1.0 - adam.beta2) * (grad * grad)
+            v_hat = v_new / (1.0 - adam.beta2**t)
+            step = lr * conf * (grad / (v_hat.sqrt() + adam.eps))
+            peak = step.abs().amax()
+            if peak > config.max_update_mps:
+                step = step * (config.max_update_mps / peak)
+            next_adam = ((1.0 - adam.beta1) * grad, v_new, t)
         else:
             step = propose_update(grad, conf, lr=lr, max_update_mps=config.max_update_mps)
         if not torch.isfinite(step).all().item():
@@ -208,7 +218,7 @@ def _verify_step(
         decision = "backtracked"
     if result is None:
         w = config.sparse_blend_weight
-        result = try_direction((1.0 - w) * pred + w * sparse_grad, lr, 1.0, 0, use_adam=False)
+        result = try_direction((1.0 - w) * pred + w * sparse_grad, lr, 1.0, 1, use_adam=False)
         decision = "sparse_blend"
     if result is None and config.enable_fallback:
         full_grad = solver.adjoint_gradient(v, d_obs, wavelet, geom, f_cut=config.f_cut)["grad"]
